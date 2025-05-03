@@ -71,7 +71,9 @@ public class OpenAiOrderMatcher implements OrderMatcher {
                     3. Build a JSON array of matched IDs, with exactly one entry per instance:
                        ["<item-id-1>", "<item-id-2>", "<item-id-2>"]
                     4. Ensure the length of that array equals your detected_count.
-                    5. Return **only** two JSON objects, in order:
+                    5. If no items matches the image, return an empty array.
+                       Example: {"detected_count": 0, "matched_ids": []}
+                    6. Return **only** two JSON objects, in order:
                        {
                          "detected_count": N,
                          "matched_ids": [ ... ]
