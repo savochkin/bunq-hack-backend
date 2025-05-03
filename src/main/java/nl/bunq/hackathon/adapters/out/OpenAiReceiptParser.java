@@ -1,4 +1,3 @@
-// file: src/main/java/nl/bunq/hackathon/adapters/out/OpenAiReceiptParser.java
 package nl.bunq.hackathon.adapters.out;
 
 import com.openai.client.OpenAIClient;
