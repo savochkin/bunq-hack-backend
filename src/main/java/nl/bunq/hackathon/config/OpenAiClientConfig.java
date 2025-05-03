@@ -21,8 +21,9 @@ public class OpenAiClientConfig {
 
     @Bean
     public OpenAIClient openAIClient() {
+        String envApiKey = System.getenv("BUNQ_HACKATHON_OPENAI_API_KEY");
         return OpenAIOkHttpClient.builder()
-                .apiKey(apiKey)
+                .apiKey(apiKey == null ? envApiKey : apiKey)
                 .build();
     }
 
