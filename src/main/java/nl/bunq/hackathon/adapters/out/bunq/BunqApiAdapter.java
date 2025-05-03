@@ -2,18 +2,24 @@ package nl.bunq.hackathon.adapters.out.bunq;
 
 import nl.bunq.hackathon.app.model.PaymentTab;
 import nl.bunq.hackathon.app.port.out.BankPort;
+import nl.bunq.hackathon.config.BunqClientProperties;
+
 import org.springframework.stereotype.Component;
 import java.util.Locale;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Adapter for the bunq API
  */
 @Component
+@RequiredArgsConstructor
 public class BunqApiAdapter implements BankPort {
 
+    private final BunqClientProperties bunqClientProperties;
     @Override
     public PaymentTab generatePaymentTab(String description, Double amount) {
-        String sessionToken = BunqApiClient.createSession();
+        String sessionToken = BunqApiClient.createSession(bunqClientProperties.getPrivateKeyPath());
 
         // Get user and monetary account information
         int userId = 0;
@@ -60,7 +66,7 @@ public class BunqApiAdapter implements BankPort {
 
     @Override
     public PaymentTab getPaymentTab(int tabId) {
-        String sessionToken = BunqApiClient.createSession();
+        String sessionToken = BunqApiClient.createSession(bunqClientProperties.getPrivateKeyPath());
 
         try {
             // Get user and monetary account information
