@@ -2,6 +2,7 @@ package nl.bunq.hackathon.adapters.in;
 
 import nl.bunq.hackathon.app.model.Bill;
 import nl.bunq.hackathon.app.model.Item;
+import nl.bunq.hackathon.app.model.PaymentTab;
 import nl.bunq.hackathon.app.model.Receipt;
 import nl.bunq.hackathon.app.port.in.BillService;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
 /**
  * REST API Controller for handling incoming HTTP requests.
@@ -137,6 +139,38 @@ public class ApiController {
     public ResponseEntity<Bill> getSharedBill(@PathVariable String shareCode) {
         Bill bill = billService.getBillByShareCode(shareCode);
         return ResponseEntity.ok(bill);
+    }
+
+    /**
+     * Mark a tab as paid in a bill.
+     *
+     * @param billId ID of the bill
+     * @param tabId  ID of the tab to mark as paid
+     * @return Updated tab information
+     */
+    @GetMapping("/bills/{billId}/tabs/{tabId}/pay")
+    public ResponseEntity<TabResponse> markTabAsPaid(
+        @PathVariable UUID billId,
+        @PathVariable int tabId) {
+
+        // Call the service to mark the tab as paid
+        PaymentTab updatedTab = billService.markTabAsPaid(billId, tabId);
+
+        // Return the updated tab information
+        return ResponseEntity.ok(new TabResponse(updatedTab));
+    }
+
+    @Value
+    public static class TabResponse {
+        private final int id;
+        private final String status;
+        private final String amount;
+
+        public TabResponse(PaymentTab tab) {
+            this.id = tab.getTabId();
+            this.status = tab.getStatus().toString();
+            this.amount = tab.getAmount();
+        }
     }
 
     // Request and response DTOs

@@ -2,6 +2,7 @@ package nl.bunq.hackathon.app.port.in;
 
 import nl.bunq.hackathon.app.model.Bill;
 import nl.bunq.hackathon.app.model.Item;
+import nl.bunq.hackathon.app.model.PaymentTab;
 import nl.bunq.hackathon.app.model.Receipt;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,7 +15,6 @@ public interface BillService {
     Bill getBillById(UUID billId);
     void deleteBill(UUID billId);
     Receipt addReceiptToBill(UUID billId, MultipartFile receiptImage);
-    String generateShareLink(UUID billId);
     List<Item> matchFriendOrder(String shareCode, MultipartFile orderImage);
 
     /**
@@ -33,4 +33,12 @@ public interface BillService {
      * @return The bill associated with the share code
      */
     Bill getBillByShareCode(String shareCode);
+
+    /**
+     * Refreshes the payment tabs status for all bills.
+     * Checks all tabs that are not in PAID status and updates them if they have been paid.
+     */
+    void refreshPaymentTabs();
+
+    PaymentTab markTabAsPaid(UUID billId, int tabId);
 }

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 @RequiredArgsConstructor
 public class PaymentTab {
     private int tabId;

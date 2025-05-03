@@ -3,6 +3,7 @@ package nl.bunq.hackathon.adapters.out.bunq;
 import nl.bunq.hackathon.app.model.PaymentTab;
 import nl.bunq.hackathon.app.port.out.BankPort;
 import org.springframework.stereotype.Component;
+import java.util.Locale;
 
 /**
  * Adapter for the bunq API
@@ -24,7 +25,7 @@ public class BunqApiAdapter implements BankPort {
             monetaryAccountId = BunqApiClient.getMonetaryAccountId(sessionToken, userId);
 
             // Format amount to string with 2 decimal places
-            String amountStr = String.format("%.2f", amount);
+            String amountStr = String.format(Locale.US, "%.2f", amount);
 
             // Create bunq.me tab and get the payment link
             int tabId = BunqApiClient.getBunqMeTabId(
@@ -57,8 +58,30 @@ public class BunqApiAdapter implements BankPort {
         }
     }
 
-    public boolean checkPaymentStatus(int tabId) {
+    @Override
+    public PaymentTab getPaymentTab(int tabId) {
         String sessionToken = BunqApiClient.createSession();
-        return BunqApiClient.isTabPaid(sessionToken, tabId);
+
+        try {
+            // Get user and monetary account information
+            int userId = BunqApiClient.fetchUser(sessionToken);
+            int monetaryAccountId = BunqApiClient.getMonetaryAccountId(sessionToken, userId);
+
+            // Check if the tab is paid
+            boolean isPaid = BunqApiClient.isTabPaid(sessionToken, tabId);
+
+            // Get the tab details - this would need to be implemented in BunqApiClient
+            // For now, we'll create a basic PaymentTab with the status based on isPaid
+
+            return PaymentTab.builder()
+                .tabId(tabId)
+                .userId(userId)
+                .monetaryAccountId(monetaryAccountId)
+                .status(isPaid ? "PAID" : "WAITING_FOR_PAYMENT")
+                .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to get payment tab: " + e.getMessage(), e);
+        }
     }
 }

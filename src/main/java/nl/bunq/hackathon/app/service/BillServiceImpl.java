@@ -94,20 +94,6 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
-    public String generateShareLink(UUID billId) {
-        Bill bill = getBillById(billId);
-
-        // Generate a random share code if one doesn't exist
-        if (bill.getShareCode() == null || bill.getShareCode().isEmpty()) {
-            String shareCode = generateRandomShareCode();
-            bill.setShareCode(shareCode);
-            billRepository.save(bill);
-        }
-
-        return bill.getShareCode();
-    }
-
-    @Override
     public String generatePaymentLink(String shareCode, Double amount) {
         Bill bill = billRepository.findByShareCode(shareCode)
             .orElseThrow(() -> new InvalidShareCodeException("Invalid share code: " + shareCode));
@@ -135,6 +121,67 @@ public class BillServiceImpl implements BillService {
         billRepository.save(bill);
 
         return matchedItems;
+    }
+
+    @Override
+    public void refreshPaymentTabs() {
+        List<Bill> bills = billRepository.findAll();
+
+        for (Bill bill : bills) {
+            if (bill.getPaymentTabs() != null && !bill.getPaymentTabs().isEmpty()) {
+                boolean billUpdated = false;
+
+                for (PaymentTab tab : bill.getPaymentTabs()) {
+                    // Only check tabs that are not already marked as PAID
+                    if (!"PAID".equals(tab.getStatus())) {
+                        // Check the current status from the bank
+                        PaymentTab updatedTab = bankPort.getPaymentTab(tab.getTabId());
+                        if (updatedTab == null) {
+                            continue;
+                        }
+
+                        // If the status has changed to PAID, update it
+                        if ("PAID".equals(updatedTab.getStatus())) {
+                            tab.toBuilder().status(updatedTab.getStatus()).build();
+                            billUpdated = true;
+                        }
+                    }
+                }
+
+                // Only save the bill if there were changes
+                if (billUpdated) {
+                    billRepository.save(bill);
+                }
+            }
+        }
+    }
+
+    @Override
+    public PaymentTab markTabAsPaid(UUID billId, int tabId) {
+        Bill bill = getBillById(billId);
+
+        if (bill.getPaymentTabs() == null || bill.getPaymentTabs().isEmpty()) {
+            throw new RuntimeException("No payment tabs found for bill: " + billId);
+        }
+
+        PaymentTab tabToUpdate = bill.getPaymentTabs().stream()
+            .filter(tab -> tab.getTabId() == tabId)
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Payment tab not found with id: " + tabId));
+
+        // Update the tab status to PAID
+        PaymentTab updatedTab = tabToUpdate.toBuilder()
+            .status("PAID")
+            .build();
+
+        // Replace the old tab with the updated one
+        bill.getPaymentTabs().remove(tabToUpdate);
+        bill.getPaymentTabs().add(updatedTab);
+
+        // Save the updated bill
+        billRepository.save(bill);
+
+        return updatedTab;
     }
 
     // Custom exceptions
