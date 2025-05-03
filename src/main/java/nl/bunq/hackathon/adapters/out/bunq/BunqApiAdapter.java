@@ -2,18 +2,26 @@ package nl.bunq.hackathon.adapters.out.bunq;
 
 import nl.bunq.hackathon.app.model.PaymentTab;
 import nl.bunq.hackathon.app.port.out.BankPort;
+import nl.bunq.hackathon.config.BunqClientProperties;
+
 import org.springframework.stereotype.Component;
+
 import java.util.Locale;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Adapter for the bunq API
  */
 @Component
+@RequiredArgsConstructor
 public class BunqApiAdapter implements BankPort {
+
+    private final BunqClientProperties bunqClientProperties;
 
     @Override
     public PaymentTab generatePaymentTab(String description, Double amount) {
-        String sessionToken = BunqApiClient.createSession();
+        String sessionToken = BunqApiClient.createSession(bunqClientProperties);
 
         // Get user and monetary account information
         int userId = 0;
@@ -29,29 +37,30 @@ public class BunqApiAdapter implements BankPort {
 
             // Create bunq.me tab and get the payment link
             int tabId = BunqApiClient.getBunqMeTabId(
-                sessionToken,
-                amountStr,
-                "EUR",
-                description,
-                "https://bunq.com",
-                userId,
-                monetaryAccountId
+                    sessionToken,
+                    amountStr,
+                    "EUR",
+                    description,
+                    "https://bunq.com",
+                    userId,
+                    monetaryAccountId,
+                    bunqClientProperties.getClient().getPrivateKeyPath()
             );
 
             String paymentLink = BunqApiClient.getPaymeLink(sessionToken, tabId);
 
             // Create and return the PaymentTab object
             return PaymentTab.builder()
-                .tabId(tabId)
-                .amount(amountStr)
-                .currency("EUR")
-                .description(description)
-                .redirectUrl("https://bunq.com")
-                .userId(userId)
-                .monetaryAccountId(monetaryAccountId)
-                .paymentLink(paymentLink)
-                .status("WAITING_FOR_PAYMENT")
-                .build();
+                    .tabId(tabId)
+                    .amount(amountStr)
+                    .currency("EUR")
+                    .description(description)
+                    .redirectUrl("https://bunq.com")
+                    .userId(userId)
+                    .monetaryAccountId(monetaryAccountId)
+                    .paymentLink(paymentLink)
+                    .status("WAITING_FOR_PAYMENT")
+                    .build();
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate payment tab: " + e.getMessage(), e);
@@ -60,7 +69,7 @@ public class BunqApiAdapter implements BankPort {
 
     @Override
     public PaymentTab getPaymentTab(int tabId) {
-        String sessionToken = BunqApiClient.createSession();
+        String sessionToken = BunqApiClient.createSession(bunqClientProperties);
 
         try {
             // Get user and monetary account information
@@ -74,11 +83,11 @@ public class BunqApiAdapter implements BankPort {
             // For now, we'll create a basic PaymentTab with the status based on isPaid
 
             return PaymentTab.builder()
-                .tabId(tabId)
-                .userId(userId)
-                .monetaryAccountId(monetaryAccountId)
-                .status(isPaid ? "PAID" : "WAITING_FOR_PAYMENT")
-                .build();
+                    .tabId(tabId)
+                    .userId(userId)
+                    .monetaryAccountId(monetaryAccountId)
+                    .status(isPaid ? "PAID" : "WAITING_FOR_PAYMENT")
+                    .build();
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to get payment tab: " + e.getMessage(), e);

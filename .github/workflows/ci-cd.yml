@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ master, ci-cd ]
+    branches: [ master, test-keys ]
   workflow_dispatch:
 
 jobs:
@@ -108,6 +108,9 @@ jobs:
             docker run -d \
               --name app \
               -p 80:8080 \
+              -v /root/installation.key:/app/keys/installation.key:ro \
+              -v /root/installation.pub:/app/keys/installation.pub:ro \
+              -e BUNQ_PRIVATE_KEY_PATH=/app/keys/installation.key \
               -e BUNQ_HACKATHON_OPENAI_API_KEY=${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }} \
               -e BUNQ_USER_API_KEY=${{ secrets.BUNQ_USER_API_KEY }} \
               -e INSTALLATION_TOKEN=${{ secrets.INSTALLATION_TOKEN }} \

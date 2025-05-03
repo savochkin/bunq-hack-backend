@@ -1,6 +1,18 @@
 package nl.bunq.hackathon.adapters.out.bunq;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.stereotype.Component;
+
+import nl.bunq.hackathon.config.BunqClientProperties;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,39 +22,22 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.fluent.Request;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.json.JSONObject;
-import org.json.JSONArray;
+import lombok.RequiredArgsConstructor;
 
+@Component
+@RequiredArgsConstructor
 public class BunqApiClient {
-    private static final String PRIVATE_KEY_PATH = "installation.key"; // adjust if needed
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String API_KEY = dotenv.get("BUNQ_USER_API_KEY"); // Read from .env
-    private static final String INSTALLATION_TOKEN = dotenv.get("INSTALLATION_TOKEN"); // Read from .env
-
-    // public static void main(String[] args) throws Exception {
-    //     String sessionToken = createSession();
-    //     String payMeLink = generatePayMeLink(sessionToken, "10.00", "EUR", "Coffee money", "https://bunq.com");
-    //     System.out.println("Pay Me Link: " + payMeLink);
-    // }
-
-    public static String createSession() {
-        String payload = "{\"secret\":\"" + API_KEY + "\"}";
-        String signature = signPayload(payload, PRIVATE_KEY_PATH);
+    public static String createSession(BunqClientProperties bunqClientProperties) {
+        String payload = "{\"secret\":\"" + bunqClientProperties.getUserApiKey() + "\"}";
+        String signature = signPayload(payload, bunqClientProperties.getClient().getPrivateKeyPath());
         String sessionToken = null;
 
-        System.out.println("Using Installation Token: " + INSTALLATION_TOKEN.substring(0, 10) + "...");
-        System.out.println("API Key: " + API_KEY.substring(0, 10) + "...");
+        System.out.println("Using Installation Token: " + bunqClientProperties.getInstallationToken().substring(0, 10) + "...");
+        System.out.println("API Key: " + bunqClientProperties.getUserApiKey().substring(0, 10) + "...");
 
         try {
             String response = Request.post("https://public-api.sandbox.bunq.com/v1/session-server")
-                .addHeader("X-Bunq-Client-Authentication", INSTALLATION_TOKEN)
+                .addHeader("X-Bunq-Client-Authentication", bunqClientProperties.getInstallationToken())
                 .addHeader("X-Bunq-Client-Signature", signature)
                 .bodyString(payload, org.apache.hc.core5.http.ContentType.APPLICATION_JSON)
                 .execute()
@@ -102,7 +97,7 @@ public class BunqApiClient {
         }
     }
 
-    public static String generatePayMeLink(String sessionToken, String amount, String currency, String description, String redirectUrl) {
+    public static String generatePayMeLink(String sessionToken, String amount, String currency, String description, String redirectUrl, String keyPath) {
         if (sessionToken == null) {
             throw new IllegalStateException("No session token available. Call createSession() first.");
         }
@@ -114,7 +109,7 @@ public class BunqApiClient {
                 throw new RuntimeException("Could not find monetary account ID in response");
             }
             System.out.println("Using Monetary Account ID: " + monetaryAccountId);
-            int bunqMeTabId = getBunqMeTabId(sessionToken, amount, currency, description, redirectUrl, userId, monetaryAccountId);
+            int bunqMeTabId = getBunqMeTabId(sessionToken, amount, currency, description, redirectUrl, userId, monetaryAccountId, keyPath);
             return getPaymeLink(sessionToken, bunqMeTabId);
         } catch (Exception e) {
             System.err.println("Error generating Pay Me link: " + e.getMessage());
@@ -124,7 +119,7 @@ public class BunqApiClient {
     }
 
     public static int getBunqMeTabId(String sessionToken, String amount, String currency, String description, String redirectUrl, int userId,
-                                      int monetaryAccountId) throws Exception {
+                                      int monetaryAccountId, String keyPath ) throws Exception {
         // Escape special characters in description to prevent JSON formatting issues
         String escapedDescription = description.replace("\"", "\\\"");
 
@@ -143,7 +138,7 @@ public class BunqApiClient {
         String payload = requestBody.toString();
         System.out.println("Request payload: " + payload);
 
-        String signature = signPayload(payload, PRIVATE_KEY_PATH);
+        String signature = signPayload(payload, keyPath);
         System.out.println("Generated signature: " + signature.substring(0, 20) + "...");
 
         int bunqMeTabId1 = 0;
