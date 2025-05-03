@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 public class OpenAiClientConfig {
 
-    @Value("${BUNQ_HACKATHON_OPENAI_API_KEY}")
+    @Value("${openai.api-key}")
     private String apiKey;
 
     @Value("${openai.model.vision}")
