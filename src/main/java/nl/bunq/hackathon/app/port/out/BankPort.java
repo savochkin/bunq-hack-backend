@@ -1,5 +1,7 @@
 package nl.bunq.hackathon.app.port.out;
 
+import nl.bunq.hackathon.app.model.PaymentTab;
+
 /**
  * Port for banking operations
  */
@@ -12,5 +14,5 @@ public interface BankPort {
      * @param amount Amount to be paid
      * @return Payment link URL
      */
-    String generatePaymentLink(String description, Double amount);
+    PaymentTab generatePaymentTab(String description, Double amount);
 }

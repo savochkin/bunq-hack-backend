@@ -21,12 +21,21 @@ public class Bill {
     @Builder.Default
     private List<Receipt> receipts = new ArrayList<>();
     private String shareCode;
+    @Builder.Default
+    private List<PaymentTab> paymentTabs = new ArrayList<>();
 
     public void addReceipt(Receipt receipt) {
         if (receipts == null) {
             receipts = new ArrayList<>();
         }
         receipts.add(receipt);
+    }
+
+    public void addPaymentTab(PaymentTab paymentTab) {
+        if (paymentTabs == null) {
+            paymentTabs = new ArrayList<>();
+        }
+        paymentTabs.add(paymentTab);
     }
 
     public List<Item> getAllItems() {

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import nl.bunq.hackathon.app.model.Bill;
 import nl.bunq.hackathon.app.model.Item;
+import nl.bunq.hackathon.app.model.PaymentTab;
 import nl.bunq.hackathon.app.model.Receipt;
 import nl.bunq.hackathon.app.port.in.BillService;
 import nl.bunq.hackathon.app.port.out.BankPort;
@@ -43,9 +44,18 @@ public class BillServiceImpl implements BillService {
             .id(UUID.randomUUID())
             .name(name)
             .createdAt(LocalDateTime.now())
+            .shareCode(generateRandomShareCode())
             .build();
 
         return billRepository.save(bill);
+    }
+
+    private String generateRandomShareCode() {
+        StringBuilder shareCode = new StringBuilder(SHARE_CODE_LENGTH);
+        for (int i = 0; i < SHARE_CODE_LENGTH; i++) {
+            shareCode.append(SHARE_CODE_CHARS.charAt(random.nextInt(SHARE_CODE_CHARS.length())));
+        }
+        return shareCode.toString();
     }
 
     @Override
@@ -93,18 +103,18 @@ public class BillServiceImpl implements BillService {
 
     @Override
     public String generatePaymentLink(String shareCode, Double amount) {
-        // Find the bill by shareCode
         Bill bill = billRepository.findByShareCode(shareCode)
             .orElseThrow(() -> new InvalidShareCodeException("Invalid share code: " + shareCode));
 
-        // Create a descriptive payment text
         String description = String.format("You're paying €%.2f for %s, out of a total of €%.2f.",
             amount,
             bill.getName(),
             bill.getTotalAmount());
 
-        // Generate the payment link with the descriptive text
-        return bankPort.generatePaymentLink(description, amount);
+        PaymentTab paymentTab = bankPort.generatePaymentTab(description, amount);
+        bill.addPaymentTab(paymentTab);
+        billRepository.save(bill);
+        return paymentTab.getPaymentLink();
     }
 
     @Override
@@ -119,14 +129,6 @@ public class BillServiceImpl implements BillService {
         billRepository.save(bill);
 
         return matchedItems;
-    }
-
-    private String generateRandomShareCode() {
-        StringBuilder shareCode = new StringBuilder(SHARE_CODE_LENGTH);
-        for (int i = 0; i < SHARE_CODE_LENGTH; i++) {
-            shareCode.append(SHARE_CODE_CHARS.charAt(random.nextInt(SHARE_CODE_CHARS.length())));
-        }
-        return shareCode.toString();
     }
 
     // Custom exceptions

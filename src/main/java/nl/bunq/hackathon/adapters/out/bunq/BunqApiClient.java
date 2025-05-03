@@ -123,7 +123,7 @@ public class BunqApiClient {
         }
     }
 
-    private static int getBunqMeTabId(String sessionToken, String amount, String currency, String description, String redirectUrl, int userId,
+    public static int getBunqMeTabId(String sessionToken, String amount, String currency, String description, String redirectUrl, int userId,
                                       int monetaryAccountId) throws Exception {
         // Escape special characters in description to prevent JSON formatting issues
         String escapedDescription = description.replace("\"", "\\\"");
@@ -206,7 +206,7 @@ public class BunqApiClient {
         return bunqMeTabId1;
     }
 
-    private static int getMonetaryAccountId(String sessionToken, int userId) throws IOException {
+    public static int getMonetaryAccountId(String sessionToken, int userId) throws IOException {
         String accountsResponse =
             Request.get("https://public-api.sandbox.bunq.com/v1/user/" + userId + "/monetary-account")
                 .addHeader("X-Bunq-Client-Authentication", sessionToken)
@@ -229,7 +229,7 @@ public class BunqApiClient {
         return monetaryAccountId;
     }
 
-    private static int fetchUser(String sessionToken) throws IOException {
+    public static int fetchUser(String sessionToken) throws IOException {
         // First, get the user ID
         String userResponse = Request.get("https://public-api.sandbox.bunq.com/v1/user")
             .addHeader("X-Bunq-Client-Authentication", sessionToken)
@@ -261,7 +261,7 @@ public class BunqApiClient {
         return userId;
     }
 
-    private static String getPaymeLink(String sessionToken, int bunqMeTabId) throws Exception {
+    public static String getPaymeLink(String sessionToken, int bunqMeTabId) throws Exception {
         if (sessionToken == null) {
             throw new IllegalStateException("No session token available. Call createSession() first.");
         }
