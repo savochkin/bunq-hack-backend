@@ -28,9 +28,17 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew clean build
+        env:
+          BUNQ_HACKATHON_OPENAI_API_KEY: ${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }}
+          BUNQ_USER_API_KEY: ${{ secrets.BUNQ_USER_API_KEY }}
+          INSTALLATION_TOKEN: ${{ secrets.INSTALLATION_TOKEN }}
 
       - name: Run tests
         run: ./gradlew test
+        env:
+          BUNQ_HACKATHON_OPENAI_API_KEY: ${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }}
+          BUNQ_USER_API_KEY: ${{ secrets.BUNQ_USER_API_KEY }}
+          INSTALLATION_TOKEN: ${{ secrets.INSTALLATION_TOKEN }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -73,6 +81,10 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
+          build-args: |
+            BUNQ_HACKATHON_OPENAI_API_KEY=${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }}
+            BUNQ_USER_API_KEY=${{ secrets.BUNQ_USER_API_KEY }}
+            INSTALLATION_TOKEN=${{ secrets.INSTALLATION_TOKEN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
