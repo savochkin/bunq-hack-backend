@@ -1,9 +1,5 @@
 package nl.bunq.hackathon.adapters.out;
 
-import nl.bunq.hackathon.app.model.Bill;
-import nl.bunq.hackathon.app.model.Item;
-import nl.bunq.hackathon.app.model.Receipt;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +9,10 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import nl.bunq.hackathon.app.model.Bill;
+import nl.bunq.hackathon.app.model.Item;
+import nl.bunq.hackathon.app.model.Receipt;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 class OpenAiOrderMatcherIT {
 
-    @Autowired
+   @Autowired
     private OpenAiOrderMatcher orderMatcher;
 
     @Test
