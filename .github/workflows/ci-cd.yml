@@ -1,0 +1,115 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, ci-cd ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew clean build
+        env:
+          BUNQ_HACKATHON_OPENAI_API_KEY: ${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }}
+          BUNQ_USER_API_KEY: ${{ secrets.BUNQ_USER_API_KEY }}
+          INSTALLATION_TOKEN: ${{ secrets.INSTALLATION_TOKEN }}
+
+      - name: Run tests
+        run: ./gradlew test -i
+        env:
+          BUNQ_HACKATHON_OPENAI_API_KEY: ${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }}
+          BUNQ_USER_API_KEY: ${{ secrets.BUNQ_USER_API_KEY }}
+          INSTALLATION_TOKEN: ${{ secrets.INSTALLATION_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/libs/*.jar
+          retention-days: 1
+
+  docker:
+    name: Build and Push Docker Image
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/libs
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.PAT_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          build-args: |
+            BUNQ_HACKATHON_OPENAI_API_KEY=${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }}
+            BUNQ_USER_API_KEY=${{ secrets.BUNQ_USER_API_KEY }}
+            INSTALLATION_TOKEN=${{ secrets.INSTALLATION_TOKEN }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Load SSH key
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Droplet
+        run: |
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            docker pull ghcr.io/${{ github.repository }}:latest
+            docker stop app || true
+            docker rm app   || true
+            docker run -d \
+              --name app \
+              -p 80:8080 \
+              -e BUNQ_HACKATHON_OPENAI_API_KEY=${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }} \
+              -e BUNQ_USER_API_KEY=${{ secrets.BUNQ_USER_API_KEY }} \
+              -e INSTALLATION_TOKEN=${{ secrets.INSTALLATION_TOKEN }} \
+              ghcr.io/${{ github.repository }}:latest
+          EOF

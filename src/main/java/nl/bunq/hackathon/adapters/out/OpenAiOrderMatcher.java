@@ -60,20 +60,23 @@ public class OpenAiOrderMatcher implements OrderMatcher {
                     ChatCompletionContentPart.ofText(
                             ChatCompletionContentPartText.builder()
                                     .text(String.format("""
-                                                You are a system that matches what’s in an image to a given list of bill items.
-                                            
-                                                                  Bill items (JSON array):
-                                                                  %s
-        
-                                                                  Instructions:
-                                                                  1. Examine the image and identify every food or drink item you see.
-                                                                  2. For each detected item, find the corresponding entry in the bill list by matching its name (case-insensitive) or a common synonym.
-                                                                  3. If an item appears more than once in the image, include its ID once per occurrence.
-                                                                  4. Ignore anything not in the bill list.
-                                                                  5. Return ONLY a JSON array of the matched item IDs, for example:
-                                                                     ["<item-id-1>", "<item-id-2>", "<item-id-2>"]
-                                            
-                                            """, itemsJson))
+                    Bill items (JSON array):
+                    %s
+
+                    Instructions:
+                    1. Visually count how many food or drink *instances* you see in the image.
+                       Reply first with: {"detected_count": N}
+                    2. For each detected instance, match it to one bill item by name or common synonym.
+                       Examples: "tosti" → "Tosti Kaas", "coke" → "Cola"
+                    3. Build a JSON array of matched IDs, with exactly one entry per instance:
+                       ["<item-id-1>", "<item-id-2>", "<item-id-2>"]
+                    4. Ensure the length of that array equals your detected_count.
+                    5. Return **only** two JSON objects, in order:
+                       {
+                         "detected_count": N,
+                         "matched_ids": [ ... ]
+                       }
+                    """, itemsJson))
                                     .build()
                     );
 
@@ -91,8 +94,9 @@ public class OpenAiOrderMatcher implements OrderMatcher {
             ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                     .model(openAiConfig.getVisionModel())
                     .addSystemMessage("""
-                            You are an expert at matching orders with available items.
-                            Return only valid JSON array of matched item IDs.
+                            You are an expert at matching what’s in an image to a given list of bill items.
+                         Always return **only** valid JSON in exactly the format described.
+                         If unsure, pick the closest match but do not invent items.
                             """)
                     .addUserMessageOfArrayOfContentParts(List.of(textPart, imagePart))
                     .build();
