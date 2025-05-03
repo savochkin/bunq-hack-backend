@@ -87,11 +87,29 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy to Production
     needs: docker
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-
     steps:
-      - name: Deploy to production
-        run: echo "Deployment step would go here"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Load SSH key
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Droplet
+        run: |
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.DEPLOY_HOST }} << 'EOF'
+            docker pull ghcr.io/${{ github.repository }}:latest
+            docker stop app || true
+            docker rm app   || true
+            docker run -d \
+              --name app \
+              -p 80:8080 \
+              -e BUNQ_HACKATHON_OPENAI_API_KEY=${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }} \
+              -e BUNQ_USER_API_KEY=${{ secrets.BUNQ_USER_API_KEY }} \
+              -e INSTALLATION_TOKEN=${{ secrets.INSTALLATION_TOKEN }} \
+              ghcr.io/${{ github.repository }}:latest
+          EOF
