@@ -8,7 +8,7 @@ spring:
       max-request-size: 10MB
 
 openai:
-  api-key: ${BUNQ_HACKATHON_OPENAI_API_KEY}
+  api-key: ${BUNQ_HACKATHON_OPENAI_API_KEY:}
   model:
     vision: gpt-4o-mini
 
