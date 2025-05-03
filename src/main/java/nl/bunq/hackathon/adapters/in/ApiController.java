@@ -4,6 +4,7 @@ import nl.bunq.hackathon.app.model.Bill;
 import nl.bunq.hackathon.app.model.Item;
 import nl.bunq.hackathon.app.model.Receipt;
 import nl.bunq.hackathon.app.port.in.BillService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -83,14 +84,14 @@ public class ApiController {
     /**
      * Upload a receipt to a bill.
      *
-     * @param billId ID of the bill
+     * @param billId       ID of the bill
      * @param receiptImage Image file of the receipt
      * @return Parsed receipt data
      */
     @PostMapping(value = "/bills/{billId}/receipts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Receipt> uploadReceipt(
-            @PathVariable UUID billId,
-            @RequestParam("receipt") MultipartFile receiptImage) {
+        @PathVariable UUID billId,
+        @RequestParam("receipt") MultipartFile receiptImage) {
         Receipt receipt = billService.addReceiptToBill(billId, receiptImage);
         return ResponseEntity.status(HttpStatus.CREATED).body(receipt);
     }
@@ -98,14 +99,14 @@ public class ApiController {
     /**
      * Match a friend's order with a shared bill.
      *
-     * @param shareCode Share code of the bill
+     * @param shareCode  Share code of the bill
      * @param orderImage Image of the friend's order
      * @return List of matched items
      */
     @PostMapping(value = "/shared/{shareCode}/match", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<Item>> matchFriendOrder(
-            @PathVariable String shareCode,
-            @RequestParam("order") MultipartFile orderImage) {
+        @PathVariable String shareCode,
+        @RequestParam("order") MultipartFile orderImage) {
         List<Item> matchedItems = billService.matchFriendOrder(shareCode, orderImage);
         return ResponseEntity.ok(matchedItems);
     }
@@ -114,7 +115,7 @@ public class ApiController {
      * Generate a payment link for a shared bill.
      *
      * @param shareCode Share code of the bill
-     * @param amount Amount to pay
+     * @param amount    Amount to pay
      * @return Payment link
      */
     @GetMapping("/shared/{shareCode}/pay/{amount}")
@@ -124,6 +125,18 @@ public class ApiController {
         // Use billService to generate the payment link
         String paymentLink = billService.generatePaymentLink(shareCode, amount);
         return ResponseEntity.ok(new PaymentLinkResponse(paymentLink));
+    }
+
+    /**
+     * Get a shared bill using its share code.
+     *
+     * @param shareCode Share code of the bill
+     * @return Bill details for the shared bill
+     */
+    @GetMapping("/shared/{shareCode}")
+    public ResponseEntity<Bill> getSharedBill(@PathVariable String shareCode) {
+        Bill bill = billService.getBillByShareCode(shareCode);
+        return ResponseEntity.ok(bill);
     }
 
     // Request and response DTOs
@@ -163,3 +176,4 @@ public class ApiController {
         }
     }
 }
+

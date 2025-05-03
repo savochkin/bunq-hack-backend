@@ -65,6 +65,12 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
+    public Bill getBillByShareCode(String shareCode) {
+        return billRepository.findByShareCode(shareCode)
+            .orElseThrow(() -> new InvalidShareCodeException("Invalid share code: " + shareCode));
+    }
+
+    @Override
     public void deleteBill(UUID billId) {
         // Check if bill exists first
         getBillById(billId);

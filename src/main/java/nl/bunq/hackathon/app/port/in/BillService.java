@@ -25,4 +25,12 @@ public interface BillService {
      * @return Payment link URL
      */
     String generatePaymentLink(String shareCode, Double amount);
+
+    /**
+     * Retrieves a bill by its share code.
+     *
+     * @param shareCode The share code of the bill
+     * @return The bill associated with the share code
+     */
+    Bill getBillByShareCode(String shareCode);
 }
