@@ -1,0 +1,36 @@
+# Git related
+.git
+.gitignore
+
+# IDE related
+.idea
+*.iml
+*.iws
+*.ipr
+.vscode
+
+# Gradle related
+.gradle
+**/build/
+!src/**/build/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Documentation
+README.md
+CHANGELOG.md
+CLAUDE.md
+
+# Test images (include only if you want to exclude them from the container)
+# src/test/resources/samples/
+
+# Misc
+.DS_Store
+Thumbs.db
