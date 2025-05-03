@@ -96,18 +96,6 @@ public class ApiController {
     }
 
     /**
-     * Generate a share link for a bill.
-     *
-     * @param billId ID of the bill to share
-     * @return Share code
-     */
-    @PostMapping("/bills/{billId}/share")
-    public ResponseEntity<ShareLinkResponse> generateShareLink(@PathVariable UUID billId) {
-        String shareCode = billService.generateShareLink(billId);
-        return ResponseEntity.ok(new ShareLinkResponse(shareCode));
-    }
-
-    /**
      * Match a friend's order with a shared bill.
      *
      * @param shareCode Share code of the bill
