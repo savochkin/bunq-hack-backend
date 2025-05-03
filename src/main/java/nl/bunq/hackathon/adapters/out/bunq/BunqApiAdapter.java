@@ -21,7 +21,7 @@ public class BunqApiAdapter implements BankPort {
 
     @Override
     public PaymentTab generatePaymentTab(String description, Double amount) {
-        String sessionToken = BunqApiClient.createSession(bunqClientProperties.getPrivateKeyPath());
+        String sessionToken = BunqApiClient.createSession(bunqClientProperties);
 
         // Get user and monetary account information
         int userId = 0;
@@ -44,7 +44,7 @@ public class BunqApiAdapter implements BankPort {
                     "https://bunq.com",
                     userId,
                     monetaryAccountId,
-                    bunqClientProperties.getPrivateKeyPath()
+                    bunqClientProperties.getClient().getPrivateKeyPath()
             );
 
             String paymentLink = BunqApiClient.getPaymeLink(sessionToken, tabId);
@@ -69,7 +69,7 @@ public class BunqApiAdapter implements BankPort {
 
     @Override
     public PaymentTab getPaymentTab(int tabId) {
-        String sessionToken = BunqApiClient.createSession(bunqClientProperties.getPrivateKeyPath());
+        String sessionToken = BunqApiClient.createSession(bunqClientProperties);
 
         try {
             // Get user and monetary account information

@@ -1,6 +1,16 @@
 package nl.bunq.hackathon.adapters.out.bunq;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.fluent.Request;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.stereotype.Component;
+
 import nl.bunq.hackathon.config.BunqClientProperties;
 
 import java.io.IOException;
@@ -12,38 +22,22 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.fluent.Request;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.json.JSONObject;
-import org.json.JSONArray;
-import org.springframework.stereotype.Component;
-
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class BunqApiClient {
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String API_KEY = dotenv.get("BUNQ_USER_API_KEY"); // Read from .env
-    private static final String INSTALLATION_TOKEN = dotenv.get("INSTALLATION_TOKEN"); // Read from .env
-
-
-    public static String createSession(String keyPath) {
-        String payload = "{\"secret\":\"" + API_KEY + "\"}";
-        String signature = signPayload(payload, keyPath);
+    public static String createSession(BunqClientProperties bunqClientProperties) {
+        String payload = "{\"secret\":\"" + bunqClientProperties.getUserApiKey() + "\"}";
+        String signature = signPayload(payload, bunqClientProperties.getClient().getPrivateKeyPath());
         String sessionToken = null;
 
-        System.out.println("Using Installation Token: " + INSTALLATION_TOKEN.substring(0, 10) + "...");
-        System.out.println("API Key: " + API_KEY.substring(0, 10) + "...");
+        System.out.println("Using Installation Token: " + bunqClientProperties.getInstallationToken().substring(0, 10) + "...");
+        System.out.println("API Key: " + bunqClientProperties.getUserApiKey().substring(0, 10) + "...");
 
         try {
             String response = Request.post("https://public-api.sandbox.bunq.com/v1/session-server")
-                .addHeader("X-Bunq-Client-Authentication", INSTALLATION_TOKEN)
+                .addHeader("X-Bunq-Client-Authentication", bunqClientProperties.getInstallationToken())
                 .addHeader("X-Bunq-Client-Signature", signature)
                 .bodyString(payload, org.apache.hc.core5.http.ContentType.APPLICATION_JSON)
                 .execute()
