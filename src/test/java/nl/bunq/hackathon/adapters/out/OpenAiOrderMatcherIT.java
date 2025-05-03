@@ -51,6 +51,7 @@ class OpenAiOrderMatcherIT {
                 fileContent
         );
 
+        System.out.println("TESTING");
         List<Item> matchedItems = orderMatcher.matchOrderWithBill(bill, orderImage);
 
         assertThat(matchedItems).isNotEmpty();
