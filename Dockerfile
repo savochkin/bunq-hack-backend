@@ -21,6 +21,5 @@ ARG INSTALLATION_TOKEN
 ENV INSTALLATION_TOKEN=${INSTALLATION_TOKEN}
 
 EXPOSE 8080
-COPY --from=build /app/keys /app/keys
 ENV BUNQ_PRIVATE_KEY_PATH=/app/keys/installation.key
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
