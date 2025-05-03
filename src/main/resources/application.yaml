@@ -1,7 +1,7 @@
 spring:
   config:
     import:
-      - optional:dotenv:./.env
+      - optional:file:./.env[.properties]
   servlet:
     multipart:
       max-file-size: 10MB
@@ -10,7 +10,7 @@ spring:
 openai:
   api-key: ${BUNQ_HACKATHON_OPENAI_API_KEY:}
   model:
-    vision: gpt-4o-mini
+    vision: gpt-4o
 
 bunq:
   user-api-key: ${BUNQ_USER_API_KEY:}
