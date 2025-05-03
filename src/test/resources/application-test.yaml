@@ -13,6 +13,6 @@ bunq:
     public-key-path: /app/keys/installation.pub
 
 openai:
-  api-key: ${BUNQ_HACKATHON_OPENAI_API_KEY}
+  api-key: ${BUNQ_HACKATHON_OPENAI_API_KEY:}
   model:
     vision: gpt-4o-mini
