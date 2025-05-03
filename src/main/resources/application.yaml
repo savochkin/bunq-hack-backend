@@ -14,7 +14,7 @@ openai:
 
 bunq:
   user-api-key: ${BUNQ_USER_API_KEY:}
-  installation-token: ${BUNQ_INSTALLATION_TOKEN:}
+  installation-token: ${INSTALLATION_TOKEN:}
   client:
     private-key-path: ${BUNQ_PRIVATE_KEY_PATH:/app/keys/installation.key}
     public-key-path:  ${BUNQ_PUBLIC_KEY_PATH:/app/keys/installation.pub}
