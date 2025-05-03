@@ -12,7 +12,6 @@ openai:
   model:
     vision: gpt-4o-mini
 
-
 bunq:
   client:
     private-key-path: ${BUNQ_PRIVATE_KEY_PATH:/app/keys/installation.key}

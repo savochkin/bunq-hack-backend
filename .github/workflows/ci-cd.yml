@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ master, ci-cd ]
+    branches: [ master, test-keys ]
   workflow_dispatch:
 
 jobs:

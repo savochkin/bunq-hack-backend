@@ -7,6 +7,11 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+bunq:
+  client:
+    private-key-path: /app/keys/installation.key
+    public-key-path: /app/keys/installation.pub
+
 openai:
   api-key: ${BUNQ_HACKATHON_OPENAI_API_KEY}
   model:
