@@ -105,13 +105,14 @@ class OpenAiOrderMatcherIT {
 
         List<Item> matchedItems = orderMatcher.matchOrderWithBill(bill, orderImage);
 
-        assertThat(matchedItems).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(matchedItems).hasSizeGreaterThanOrEqualTo(3);
 
         List<String> matchedNames = matchedItems.stream()
                 .map(Item::getName)
                 .toList();
 
         assertThat(matchedNames).anyMatch(name -> name.contains("Sandwich") || name.contains("Tosti"));
+        assertThat(matchedNames).anyMatch(name -> name.contains("Appletaart") || name.contains("Tosti"));
         assertThat(matchedNames).anyMatch(name -> name.contains("Limonade") || name.contains("Lemonade") ||
                 name.contains("Pellegrino") || name.contains("Drink"));
     }
