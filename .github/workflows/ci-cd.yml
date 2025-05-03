@@ -32,7 +32,7 @@ jobs:
           INSTALLATION_TOKEN: ${{ secrets.INSTALLATION_TOKEN }}
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test -i
         env:
           BUNQ_HACKATHON_OPENAI_API_KEY: ${{ secrets.BUNQ_HACKATHON_OPENAI_API_KEY }}
           BUNQ_USER_API_KEY: ${{ secrets.BUNQ_USER_API_KEY }}

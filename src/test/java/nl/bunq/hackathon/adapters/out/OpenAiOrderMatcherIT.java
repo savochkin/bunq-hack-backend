@@ -4,6 +4,7 @@ import nl.bunq.hackathon.app.model.Bill;
 import nl.bunq.hackathon.app.model.Item;
 import nl.bunq.hackathon.app.model.Receipt;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
@@ -31,7 +33,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @ActiveProfiles("test")
+@TestPropertySource(properties = {
+    "openai.api-key=${BUNQ_HACKATHON_OPENAI_API_KEY}"
+})
 class OpenAiOrderMatcherIT {
+
+    @BeforeAll
+    static void setup() {
+        String apiKey = System.getenv("BUNQ_HACKATHON_OPENAI_API_KEY");
+        if (apiKey == null || apiKey.isBlank()) {
+            System.err.println("WARNING: BUNQ_HACKATHON_OPENAI_API_KEY environment variable is not set!");
+            System.err.println("Integration tests that call the OpenAI API will fail.");
+        } else {
+            System.out.println("BUNQ_HACKATHON_OPENAI_API_KEY is set with length: " + apiKey.length());
+            System.setProperty("openai.api-key", apiKey);
+        }
+    }
 
     @Autowired
     private OpenAiOrderMatcher orderMatcher;
@@ -51,7 +68,6 @@ class OpenAiOrderMatcherIT {
                 fileContent
         );
 
-        System.out.println("TESTING");
         List<Item> matchedItems = orderMatcher.matchOrderWithBill(bill, orderImage);
 
         assertThat(matchedItems).isNotEmpty();
