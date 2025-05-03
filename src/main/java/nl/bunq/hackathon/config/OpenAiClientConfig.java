@@ -21,6 +21,10 @@ public class OpenAiClientConfig {
 
     @Bean
     public OpenAIClient openAIClient() {
+        log.error("OpenAI API key loaded: {}…",
+                apiKey != null && apiKey.length() > 5
+                        ? apiKey.substring(0,5)+"…"
+                        : "null");
         return OpenAIOkHttpClient.builder()
                 .apiKey(apiKey)
                 .build();
